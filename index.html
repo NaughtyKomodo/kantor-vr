@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Tour 360</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+      }
+
+      #panorama {
+        width: 100vw;
+        height: 100vh;
+        border: none;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        width: 80%;
+        max-width: 300px;
+        padding: 20px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        text-align: center;
+        z-index: 1001;
+      }
+
+      /* Shadow di belakang modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1000;
+        display: none; /* Tidak tampil saat halaman pertama kali dimuat */
+      }
+
+      .modal button {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .modal button:hover {
+        background-color: #0056b3;
+      }
+
+      .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        cursor: pointer;
+        font-size: 18px;
+        color: red;
+      }
+
+      /* Styling untuk tombol panah */
+      .hotspot-button {
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 24px; /* Ukuran panah */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+      }
+
+      .hotspot-button:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
+
+      /* Styling tombol panah untuk posisi */
+      .hotspot-button.arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        z-index: 10;
+        color: white;
+        font-size: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      /* Memberi animasi hover pada tombol panah */
+      .hotspot-button.arrow:hover {
+        background: rgba(0, 0, 0, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="panorama"></div>
+
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+    <div id="modal" class="modal">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <p id="modal-text"></p>
+      <button id="modal-link" onclick="visitLink()">Tekan Di sini</button>
+    </div>
+
+    <script>
+      const viewer = pannellum.viewer("panorama", {
+        default: {
+          firstScene: "satu",
+          sceneFadeDuration: 1000,
+        },
+        autoLoad: true,
+        scenes: {
+          satu: {
+            type: "equirectangular",
+            panorama: "images/vr-kpknl.jpg",
+            yaw: -90,
+            pitch: 0,
+            hotSpots: [
+              // {
+              //   pitch: -20,
+              //   yaw: -90,
+              //   type: "custom",
+              //   createTooltipFunc: (hotSpotDiv) =>
+              //     createSceneButton(hotSpotDiv, "dua"),
+              // },
+              {
+                pitch: -5,
+                yaw: -200,
+                type: "custom",
+                createTooltipFunc: customTooltip1,
+              },
+              {
+                pitch: -5,
+                yaw: -115,
+                type: "custom",
+                createTooltipFunc: customTooltip2,
+              },
+              {
+                pitch: -5,
+                yaw: -93,
+                type: "custom",
+                createTooltipFunc: customTooltip3,
+              },
+              {
+                pitch: -5,
+                yaw: -70,
+                type: "custom",
+                createTooltipFunc: customTooltip4,
+              },
+            ],
+          },
+          dua: {
+            type: "equirectangular",
+            panorama: "images/dua.PHOTOSPHERE.jpg",
+            hotSpots: [
+              {
+                pitch: 0,
+                yaw: 20,
+                type: "custom",
+                createTooltipFunc: (hotSpotDiv) =>
+                  createSceneButton(hotSpotDiv, "tiga"),
+              },
+            ],
+          },
+          tiga: {
+            type: "equirectangular",
+            panorama: "images/tiga.PHOTOSPHERE.jpg",
+            hotSpots: [
+              {
+                pitch: 0,
+                yaw: -20,
+                type: "custom",
+                createTooltipFunc: (hotSpotDiv) =>
+                  createSceneButton(hotSpotDiv, "satu"),
+              },
+              {
+                pitch: 0,
+                yaw: 10,
+                type: "info",
+                text: "FILKOM UB, diresmikan pada 2015 setelah sebelumnya bernama PTIIK sejak 2011.",
+              },
+            ],
+          },
+        },
+      });
+
+      function openModal(text, link) {
+        document.getElementById("modal-text").innerText = text;
+        document.getElementById("modal-link").setAttribute("data-link", link);
+        document.getElementById("modal").style.display = "block";
+        document.getElementById("modal-overlay").style.display = "block"; // Menampilkan shadow saat modal terbuka
+      }
+
+      function closeModal() {
+        document.getElementById("modal").style.display = "none";
+        document.getElementById("modal-overlay").style.display = "none"; // Menyembunyikan shadow saat modal ditutup
+      }
+
+      function visitLink() {
+        let link = document.getElementById("modal-link").getAttribute("data-link");
+        window.open(link, "_blank");
+      }
+
+      function createHotspot(hotSpotDiv, text, link) {
+        hotSpotDiv.innerHTML = "";
+        let infoButton = document.createElement("button");
+        infoButton.classList.add("hotspot-button");
+        infoButton.innerText = "i";
+        infoButton.onclick = function () {
+          openModal(text, link);
+        };
+        hotSpotDiv.appendChild(infoButton);
+      }
+
+      function createSceneButton(hotSpotDiv, scene) {
+        hotSpotDiv.innerHTML = "";
+        let sceneButton = document.createElement("button");
+        sceneButton.classList.add("hotspot-button", "arrow");
+        sceneButton.innerHTML = "↑"; // Tombol panah ke atas
+        sceneButton.onclick = function () {
+          viewer.loadScene(scene);
+        };
+        hotSpotDiv.appendChild(sceneButton);
+      }
+
+      function customTooltip1(hotSpotDiv) {
+        createHotspot(
+          hotSpotDiv,
+          "Untuk Mengakses E-Auction Corner, Klik Tombol Berikut:",
+          "https://lelang.go.id/kpknl/6706040e-f64f-11ed-b3e2-5620a0c2ec5a/home"
+        );
+      }
+
+      function customTooltip2(hotSpotDiv) {
+        createHotspot(hotSpotDiv, "Untuk Mengakses Layanan Pengelolaan Kelakaan Negara, Klik Tombol Berikut:", "https://form.typeform.com/to/zX8F7Dm3");
+      }
+
+      function customTooltip3(hotSpotDiv) {
+        createHotspot(hotSpotDiv, "Untuk Mengakses Layanan Layanan Lelang, Klik Tombol Berikut:", "https://form.typeform.com/to/zX8F7Dm3");
+      }
+
+      function customTooltip4(hotSpotDiv) {
+        createHotspot(hotSpotDiv, "Untuk Mengakses Layanan Layanan Pengurusan Piutang Negara, Klik Tombol Berikut:", "https://form.typeform.com/to/zX8F7Dm3");
+      }
+    </script>
+  </body>
+</html>
